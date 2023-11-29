@@ -18,7 +18,7 @@ def nyu_resize(img, resolution=480, padding=6):
     from skimage.transform import resize
     return resize(img, (resolution, int(resolution*4/3)), preserve_range=True, mode='reflect', anti_aliasing=True )
 
-def get_nyu_data(batch_size, nyu_data_zipfile="D:/Documents/DA2/nyu_data-001.zip"):
+def get_nyu_data(batch_size, nyu_data_zipfile="/kaggle/input/nyudataset"):
     data = extract_zip(nyu_data_zipfile)
 
     nyu2_train = list((row.split(',') for row in (data['data/nyu2_train.csv']).decode("utf-8").split('\n') if len(row) > 0))
@@ -72,8 +72,8 @@ class NYU_BasicAugmentRGBSequence(Sequence):
 
             sample = self.dataset[index]
             #4nd fix:
-            x = np.clip(np.asarray(Image.open("D:/Downloads/nyu_data-001/" +sample[0] )).reshape(480,640,3)/255,0,1)
-            y = np.clip(np.asarray(Image.open( "D:/Downloads/nyu_data-001/"+sample[1] )).reshape(480,640,1)/255*self.maxDepth,0,self.maxDepth)
+            x = np.clip(np.asarray(Image.open("/kaggle/input/nyudataset" +sample[0] )).reshape(480,640,3)/255,0,1)
+            y = np.clip(np.asarray(Image.open( "/kaggle/input/nyudataset"+sample[1] )).reshape(480,640,1)/255*self.maxDepth,0,self.maxDepth)
             #2nd fix:
             #######
             #x = np.clip(np.asarray(Image.open(os.path.join("../", sample[0]))).reshape(480,640,3)/255,0,1)
@@ -150,8 +150,8 @@ class NYU_BasicRGBSequence(Sequence):
 
             #x = np.clip(np.asarray(Image.open( "../"+sample[0])).reshape(480,640,3)/255,0,1)
             #y = np.asarray(Image.open( "../"+sample[1]), dtype=np.float32).reshape(480,640,1).copy().astype(float) / 10.0
-            x = np.clip(np.asarray(Image.open(os.path.join("D:/Downloads/nyu_data-001/", sample[0]))).reshape(480,640,3)/255,0,1)
-            y = np.clip(np.asarray(Image.open(os.path.join("D:/Downloads/nyu_data-001/", sample[1]))).reshape(480,640,1)/255*self.maxDepth,0,self.maxDepth)
+            x = np.clip(np.asarray(Image.open(os.path.join("/kaggle/input/nyudataset", sample[0]))).reshape(480,640,3)/255,0,1)
+            y = np.clip(np.asarray(Image.open(os.path.join("/kaggle/input/nyudataset", sample[1]))).reshape(480,640,1)/255*self.maxDepth,0,self.maxDepth)
             y = DepthNorm(y, maxDepth=self.maxDepth)
 
             batch_x[i] = nyu_resize(x, 480)
