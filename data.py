@@ -9,7 +9,13 @@ from PIL import Image
 from zipfile import ZipFile
 from tensorflow.keras.utils import Sequence
 from augment import BasicPolicy
+##############
+from io import BytesIO
+from PIL import Image
 
+from tensorflow.keras.utils import Sequence
+from augment import BasicPolicy
+#################
 def extract_zip(input_zip):
     input_zip=ZipFile(input_zip)
     return {name: input_zip.read(name) for name in input_zip.namelist()}
@@ -18,11 +24,11 @@ def nyu_resize(img, resolution=480, padding=6):
     from skimage.transform import resize
     return resize(img, (resolution, int(resolution*4/3)), preserve_range=True, mode='reflect', anti_aliasing=True )
 
-def get_nyu_data(batch_size, nyu_data_zipfile="/kaggle/input/nyudataset"):
+def get_nyu_data(batch_size, nyu_data_zipfile="/content/drive/MyDrive/nyu_data.zip",num_rows=2000):
     data = extract_zip(nyu_data_zipfile)
 
-    nyu2_train = list((row.split(',') for row in (data['data/nyu2_train.csv']).decode("utf-8").split('\n') if len(row) > 0))
-    nyu2_test = list((row.split(',') for row in (data['data/nyu2_test.csv']).decode("utf-8").split('\n') if len(row) > 0))
+    nyu2_train = list((row.split(',') for row in (data['data/nyu2_train.csv']).decode("utf-8").split('\n') if len(row) > 0))[:num_rows]
+    nyu2_test = list((row.split(',') for row in (data['data/nyu2_test.csv']).decode("utf-8").split('\n') if len(row) > 0))[:num_rows]
 
     shape_rgb = (batch_size, 480, 640, 3)
     shape_depth = (batch_size, 240, 320, 1)
@@ -61,8 +67,37 @@ class NYU_BasicAugmentRGBSequence(Sequence):
     def __len__(self):
         return int(np.ceil(self.N / float(self.batch_size)))
 
-#original
+# fix:
 
+    def __getitem__(self, idx, is_apply_policy=True):
+        batch_x, batch_y = np.zeros(self.shape_rgb), np.zeros(self.shape_depth)
+
+        for i in range(batch_x.shape[0]):
+            index = min((idx * self.batch_size) + i, self.N - 1)
+
+            sample = self.dataset[index]
+
+            # Open RGB image from the ZIP file
+            with BytesIO(self.data['' + sample[0]]) as f:
+                x = np.clip(np.asarray(Image.open(f)).reshape(480, 640, 3) / 255, 0, 1)
+
+            # Open depth image from the ZIP file
+            with BytesIO(self.data['' + sample[1]]) as f:
+                y = np.clip(np.asarray(Image.open(f)).reshape(480, 640, 1) / 255 * self.maxDepth, 0, self.maxDepth)
+
+            y = DepthNorm(y, maxDepth=self.maxDepth)
+
+            batch_x[i] = nyu_resize(x, 480)
+            batch_y[i] = nyu_resize(y, 240)
+
+            if is_apply_policy:
+                batch_x[i], batch_y[i] = self.policy(batch_x[i], batch_y[i])
+
+        return batch_x, batch_y
+
+
+#original
+'''
     def __getitem__(self, idx, is_apply_policy=True):
         batch_x, batch_y = np.zeros( self.shape_rgb ), np.zeros( self.shape_depth )
 
@@ -72,8 +107,8 @@ class NYU_BasicAugmentRGBSequence(Sequence):
 
             sample = self.dataset[index]
             #4nd fix:
-            x = np.clip(np.asarray(Image.open("/kaggle/input/nyudataset" +sample[0] )).reshape(480,640,3)/255,0,1)
-            y = np.clip(np.asarray(Image.open( "/kaggle/input/nyudataset"+sample[1] )).reshape(480,640,1)/255*self.maxDepth,0,self.maxDepth)
+            x = np.clip(np.asarray(Image.open("/content/drive/MyDrive/nyu_data.zip/" +sample[0] )).reshape(480,640,3)/255,0,1)
+            y = np.clip(np.asarray(Image.open( "/content/drive/MyDrive/nyu_data.zip/"+sample[1] )).reshape(480,640,1)/255*self.maxDepth,0,self.maxDepth)
             #2nd fix:
             #######
             #x = np.clip(np.asarray(Image.open(os.path.join("../", sample[0]))).reshape(480,640,3)/255,0,1)
@@ -91,7 +126,7 @@ class NYU_BasicAugmentRGBSequence(Sequence):
         #exit()
 
         return batch_x, batch_y
-
+'''
 '''
 #1st fix:
 class NYU_BasicAugmentRGBSequence(Sequence):
@@ -150,8 +185,8 @@ class NYU_BasicRGBSequence(Sequence):
 
             #x = np.clip(np.asarray(Image.open( "../"+sample[0])).reshape(480,640,3)/255,0,1)
             #y = np.asarray(Image.open( "../"+sample[1]), dtype=np.float32).reshape(480,640,1).copy().astype(float) / 10.0
-            x = np.clip(np.asarray(Image.open(os.path.join("/kaggle/input/nyudataset", sample[0]))).reshape(480,640,3)/255,0,1)
-            y = np.clip(np.asarray(Image.open(os.path.join("/kaggle/input/nyudataset", sample[1]))).reshape(480,640,1)/255*self.maxDepth,0,self.maxDepth)
+            x = np.clip(np.asarray(Image.open(os.path.join('', sample[0]))).reshape(480,640,3)/255,0,1)
+            y = np.clip(np.asarray(Image.open(os.path.join('', sample[1]))).reshape(480,640,1)/255*self.maxDepth,0,self.maxDepth)
             y = DepthNorm(y, maxDepth=self.maxDepth)
 
             batch_x[i] = nyu_resize(x, 480)
