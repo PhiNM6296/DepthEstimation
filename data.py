@@ -185,8 +185,16 @@ class NYU_BasicRGBSequence(Sequence):
 
             #x = np.clip(np.asarray(Image.open( "../"+sample[0])).reshape(480,640,3)/255,0,1)
             #y = np.asarray(Image.open( "../"+sample[1]), dtype=np.float32).reshape(480,640,1).copy().astype(float) / 10.0
-            x = np.clip(np.asarray(Image.open(os.path.join('', sample[0]))).reshape(480,640,3)/255,0,1)
-            y = np.clip(np.asarray(Image.open(os.path.join('', sample[1]))).reshape(480,640,1)/255*self.maxDepth,0,self.maxDepth)
+            #x = np.clip(np.asarray(Image.open(os.path.join('', sample[0]))).reshape(480,640,3)/255,0,1)
+            #y = np.clip(np.asarray(Image.open(os.path.join('', sample[1]))).reshape(480,640,1)/255*self.maxDepth,0,self.maxDepth)
+            # Open RGB image from the ZIP file
+            with BytesIO(self.data['' + sample[0]]) as f:
+                x = np.clip(np.asarray(Image.open(f)).reshape(480, 640, 3) / 255, 0, 1)
+
+            # Open depth image from the ZIP file
+            with BytesIO(self.data['' + sample[1]]) as f:
+                y = np.clip(np.asarray(Image.open(f)).reshape(480, 640, 1) / 255 * self.maxDepth, 0, self.maxDepth)
+            
             y = DepthNorm(y, maxDepth=self.maxDepth)
 
             batch_x[i] = nyu_resize(x, 480)
