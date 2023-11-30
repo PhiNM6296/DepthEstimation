@@ -28,9 +28,8 @@ def nyu_resize(img, resolution=480, padding=6):
 
 ##############
 def get_nyu_data(batch_size, kaggle_dataset_path="/kaggle/input/nyudataset", num_rows=2000):
-    nyu2_train_path = os.path.join('/kaggle/input/nyudataset/', 'data', 'nyu2_train.csv')
-    nyu2_test_path = os.path.join('/kaggle/input/nyudataset', 'data', 'nyu2_test.csv')
-
+    nyu2_train_path = '/kaggle/input/nyudataset/data/nyu2_train.csv'
+    nyu2_test_path = '/kaggle/input/nyudataset/data/nyu2_test.csv'
     nyu2_train = pd.read_csv(nyu2_train_path).values[:num_rows]
     nyu2_test = pd.read_csv(nyu2_test_path).values[:num_rows]
 
