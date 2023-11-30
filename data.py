@@ -24,6 +24,26 @@ def nyu_resize(img, resolution=480, padding=6):
     from skimage.transform import resize
     return resize(img, (resolution, int(resolution*4/3)), preserve_range=True, mode='reflect', anti_aliasing=True )
 
+
+##############
+def get_nyu_data(batch_size, kaggle_dataset_path="/kaggle/input/nyudataset", num_rows=2000):
+    nyu2_train_path = os.path.join('/kaggle/input/nyudataset/', 'data', 'nyu2_train.csv')
+    nyu2_test_path = os.path.join('/kaggle/input/nyudataset', 'data', 'nyu2_test.csv')
+
+    nyu2_train = pd.read_csv(nyu2_train_path).values[:num_rows]
+    nyu2_test = pd.read_csv(nyu2_test_path).values[:num_rows]
+
+    shape_rgb = (batch_size, 480, 640, 3)
+    shape_depth = (batch_size, 240, 320, 1)
+
+    # Helpful for testing...
+    if False:
+        nyu2_train = nyu2_train[:10]
+        nyu2_test = nyu2_test[:10]
+
+    return nyu2_train, nyu2_test, shape_rgb, shape_depth
+    ##############
+'''
 def get_nyu_data(batch_size, nyu_data_zipfile="/kaggle/input/nyudataset",num_rows=2000):
     data = extract_zip(nyu_data_zipfile)
 
@@ -39,7 +59,7 @@ def get_nyu_data(batch_size, nyu_data_zipfile="/kaggle/input/nyudataset",num_row
         nyu2_test = nyu2_test[:10]
 
     return data, nyu2_train, nyu2_test, shape_rgb, shape_depth
-
+'''
 def get_nyu_train_test_data(batch_size):
     data, nyu2_train, nyu2_test, shape_rgb, shape_depth = get_nyu_data(batch_size)
 
